@@ -51,3 +51,6 @@ Before setting up the backend, make sure you have the following installed:
    ```bash
    git clone https://github.com/your-username/fmis-backend.git
    cd fmis-backend
+2. **Install dependencies**:
+   ```bash
+   npm install
