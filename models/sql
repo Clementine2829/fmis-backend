@@ -1,0 +1,40 @@
+CREATE DATABASE users;
+
+CREATE DATABASE fmis;
+
+/** START OF USERS DATABASE **/
+CREATE TABLE
+    users (
+        user_id VARCHAR(45) PRIMARY KEY,
+        firstname VARCHAR(30) NOT NULL,
+        lastname VARCHAR(30) NOT NULL,
+        email VARCHAR(100) NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        user_type VARCHAR(20) NOT NULL DEFAULT 'basic',
+        profile_status INT NOT NULL DEFAULT 1,
+        date_created VARCHAR(20) NOT NULL,
+        date_updated TIMESTAMP NOT NULL DEFAULT NOW ()
+    );
+
+CREATE TABLE
+    farms (
+        id VARCHAR(36) PRIMARY KEY,
+        user_id VARCHAR(45),
+        name VARCHAR(255),
+        boundaries JSON,
+        location VARCHAR(255),
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    );
+
+CREATE TABLE
+    ndvi_requests (
+        id VARCHAR(36) PRIMARY KEY,
+        farm_id VARCHAR(36),
+        request_date DATE,
+        mean_ndvi FLOAT,
+        stddev_ndvi FLOAT,
+        ndvi_map_url TEXT,
+        FOREIGN KEY (farm_id) REFERENCES farms (id)
+    );
