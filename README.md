@@ -54,3 +54,14 @@ Before setting up the backend, make sure you have the following installed:
 2. **Install dependencies**:
    ```bash
    npm install
+3. **Set up your MySQL database:**:
+- Use the sql file in models to create the databse 
+
+4. **Set environment variables:**:
+- Create a .env file in the root directory
+
+
+
+---
+
+This should give you a complete profile setup for the `fmis-backend` project. Let me know if you need anything else!
