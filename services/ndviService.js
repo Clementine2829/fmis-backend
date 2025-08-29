@@ -101,77 +101,83 @@ async function fetchNDVI(boundaryGeoJSON, date) {
   }
 }
 
-async function fetchNDVIStats(boundaryGeoJSON, date) {
+async function fetchNDVIStats(boundaryGeoJSON, startDate, endDate) {
   try {
-    // const token = await getSentinelHubToken();
+    const token = await getSentinelHubToken();
 
-    // const payload = {
-    //   input: {
-    //     bounds: {
-    //       geometry: boundaryGeoJSON,
-    //       properties: {
-    //         crs: "http://www.opengis.net/def/crs/EPSG/0/4326"
-    //       }
-    //     },
-    //     data: [
-    //       {
-    //         type: "S2L2A",
-    //         dataFilter: {
-    //           timeRange: {
-    //             from: `${date}T00:00:00Z`,
-    //             to: `${date}T23:59:59Z`
-    //           }
-    //         }
-    //       }
-    //     ]
-    //   },
-    //   evalscript: `
-    //     //VERSION=3
-    //     function setup() {
-    //       return {
-    //         input: ["B04", "B08", "dataMask"],
-    //         output: [
-    //           { id: "ndvi", bands: 1, sampleType: "FLOAT32" },
-    //           { id: "dataMask", bands: 1 }
-    //         ]
-    //       };
-    //     }
-    //     function evaluatePixel(sample) {
-    //       return {
-    //         ndvi: [(sample.B08 - sample.B04) / (sample.B08 + sample.B04)],
-    //         dataMask: [sample.dataMask]
-    //       };
-    //     }
-    //   `,
-    //   output: {
-    //     stats: true
-    //   }
-    // };
+    const payload = {
+      input: {
+        bounds: {
+          geometry: boundaryGeoJSON,
+          properties: {
+            crs: "http://www.opengis.net/def/crs/EPSG/0/4326",
+          },
+        },
+        data: [
+          {
+            type: "S2L2A",
+            dataFilter: {
+              timeRange: {
+                from: `${startDate}T00:00:00Z`,
+                to: `${endDate}T23:59:59Z`,
+              },
+            },
+          },
+        ],
+      },
+      aggregation: {
+        timeRange: {
+          from: `${startDate}T00:00:00Z`,
+          to: `${endDate}T23:59:59Z`,
+        },
+        aggregationInterval: {
+          of: "P1D",
+        },
+        evalscript: `
+          //VERSION=3
+          function setup() {
+            return {
+              input: ["B04", "B08", "dataMask"],
+              output: [
+                { id: "ndvi", bands: 1, sampleType: "FLOAT32" },
+                { id: "dataMask", bands: 1 }
+              ]
+            };
+          }
 
-    // const response = await axios.post(
-    //   "https://services.sentinel-hub.com/api/v1/statistics",
-    //   payload,
-    //   {
-    //     headers: {
-    //       Authorization: `Bearer ${token}`,
-    //       "Content-Type": "application/json",
-    //       Accept: "application/json"
-    //     }
-    //   }
-    // );
+          function evaluatePixel(sample) {
+            const ndvi = (sample.B08 - sample.B04) / (sample.B08 + sample.B04);
+            return {
+              ndvi: [ndvi],
+              dataMask: [sample.dataMask]
+            };
+          }
+        `,
+      },
+    };
 
-    // // Examples show that response.data.data[0].outputs.ndvi.bands.ndvi.stats holds the NDVI stats
-    // const statsObj = response.data?.data?.[0]?.outputs?.ndvi?.bands?.ndvi?.stats;
-    // if (!statsObj) throw new Error("NDVI stats not found in response");
+    const response = await axios.post(
+      "https://services.sentinel-hub.com/api/v1/statistics",
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      }
+    );
 
-    // return {
-    //   mean: statsObj.mean,
-    //   min: statsObj.min,
-    //   max: statsObj.max,
-    //   stddev: statsObj.stDev
-    // };
+    const stats =
+      response.data?.data?.[0]?.outputs?.ndvi?.bands?.B0?.stats || null;
 
-    return { mean: 0.56, min: 0.12, max: 0.78, stddev: 0.15 };
+    return {
+      mean: parseFloat(stats?.mean.toFixed(2)) || null,
+      min: parseFloat(stats?.min.toFixed(2)) || null,
+      max: parseFloat(stats?.max.toFixed(2)) || null,
+      stddev: parseFloat(stats?.stDev.toFixed(2)) || null,
+    };
+    
   } catch (err) {
     console.error(
       "Error fetching NDVI stats:",

@@ -63,7 +63,14 @@ const getFarmNDVI = asyncHandler(async (req, res) => {
     const ndviImage = await fetchNDVI(geoJsonGeometry, date);
     console.log("NDVI image fetched");
 
-    const stats = await fetchNDVIStats(geoJsonGeometry, date);
+    const endDate = new Date(date);
+    const startDate = new Date(endDate);
+    startDate.setDate(endDate.getDate() - 6); // 7-day range because the NDVI data is aggregated weekly
+
+    const from = startDate.toISOString().split("T")[0];
+    const to = endDate.toISOString().split("T")[0];
+
+    const stats = await fetchNDVIStats(geoJsonGeometry, from, to);
     console.log("NDVI stats fetched:", stats);
 
     res.json({
